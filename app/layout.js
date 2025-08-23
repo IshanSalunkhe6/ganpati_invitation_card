@@ -4,7 +4,7 @@ export const metadata = {
   title: "Ganesh Darshan 2025",
   description: "Ganesh Darshan Invitation Website",
   icons: {
-    icon: "/ganpati-logo.jpg", // Use your JPG here
+    icon: "/ganpati-logo.jpg",
     shortcut: "/ganpati-logo.jpg",
     apple: "/ganpati-logo.jpg",
   },
