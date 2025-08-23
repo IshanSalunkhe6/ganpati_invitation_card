@@ -6,7 +6,7 @@ import InvitationCard from "@/components/InvitationCard";
 export default function HeroDesktop({ scrollToGallery }) {
   return (
     <div className="relative w-full">
-      {/* Desktop background (cover to fill wide screens) */}
+      {/* Desktop background */}
       <div className="absolute inset-0">
         <Image
           src="/images/bg-desktop.jpg"
@@ -18,11 +18,12 @@ export default function HeroDesktop({ scrollToGallery }) {
         />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-screen-lg px-6 pt-10 min-h-[720px] flex flex-col items-center">
-        <div className="w-full">
-          <Header />
-        </div>
+      {/* Music Toggle pinned top-right */}
+      <div className="absolute top-4 right-6 z-20">
+        <Header />
+      </div>
 
+      <div className="relative z-10 mx-auto max-w-screen-lg px-6 pt-10 min-h-[720px] flex flex-col items-center">
         <div className="w-full flex flex-col items-center text-center gap-5">
           <div className="relative w-56 h-56 rounded-full border-[8px] border-orange-500/90 shadow-2xl ring-4 ring-white/70 overflow-hidden">
             <Image
@@ -35,8 +36,8 @@ export default function HeroDesktop({ scrollToGallery }) {
             />
           </div>
 
-        <p className="mt-1 text-lg leading-relaxed font-medium text-red-700/90">
-            वक्रतुंड महाकाय सूर्य코टि समप्रभ ।
+          <p className="mt-1 text-lg leading-relaxed font-medium text-red-700/90">
+            वक्रतुंड महाकाय सूर्यकोटि समप्रभ ।
             <br className="hidden sm:block" />
             निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा ॥
           </p>

@@ -3,12 +3,19 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 
-const YEARS = [2024, 2023, 2022];
+// ✅ GSAP 3.13.0 includes ModifiersPlugin in core
+const { ModifiersPlugin } = gsap;
+gsap.registerPlugin(ModifiersPlugin);
+
+
+
+
+const YEARS = [2024, 2023, "Previous Years"];
 
 const imagesByYear = {
   2024: ["/gallery/2024/1.jpg","/gallery/2024/2.jpg","/gallery/2024/3.jpg","/gallery/2024/4.jpg"],
   2023: ["/gallery/2023/1.jpg","/gallery/2023/2.jpg","/gallery/2023/3.jpg"],
-  2022: ["/gallery/2022/1.jpg","/gallery/2022/2.jpg","/gallery/2022/3.jpg"],
+  "Previous Years": ["/gallery/Previous_years/1.jpg","/gallery/Previous_years/2.jpg","/gallery/Previous_years/3.jpg"],
 };
 
 export default function Gallery() {
@@ -16,39 +23,66 @@ export default function Gallery() {
   const trackRef = useRef(null);
   const tweenRef = useRef(null);
 
-  const startMarquee = () => {
-    if (!trackRef.current) return;
+  // pixels per second (↑ faster than before)
+  const SPEED = 45;
+
+  const buildMarquee = (preserveProgress = false) => {
+    const el = trackRef.current;
+    if (!el) return;
+
+    const total = el.scrollWidth / 2; // width of a single set
+    if (total === 0) return;
+
+    // Save current progress if requested
+    let prevProgress = 0;
+    if (preserveProgress && tweenRef.current) {
+      prevProgress = tweenRef.current.progress();
+    }
+
     tweenRef.current?.kill();
+    tweenRef.current = null;
 
-    // if less than 2 images, don't animate
-    const count = (imagesByYear[year] || []).length;
-    if (count < 2) return;
+    // Duration derived from distance / speed
+    const duration = total / SPEED;
 
-    const total = trackRef.current.scrollWidth / 2;
-    const DURATION = 42;
+    // Start from the same relative offset if rebuilding
+    if (preserveProgress) {
+      gsap.set(el, { x: -prevProgress * total });
+    } else {
+      gsap.set(el, { x: 0 });
+    }
 
-    tweenRef.current = gsap.fromTo(
-      trackRef.current,
-      { x: -total },
-      {
-        x: 0,
-        duration: DURATION,
-        ease: "none",
-        repeat: -1,
-        onRepeat: () => gsap.set(trackRef.current, { x: -total }),
-      }
-    );
+    // Continuous wrap using ModifiersPlugin (no onRepeat jump)
+    tweenRef.current = gsap.to(el, {
+      x: `-=${total}`,
+      duration,
+      ease: "none",
+      repeat: -1,
+      modifiers: {
+        x: (x) => {
+          const n = parseFloat(x);
+          // keep x in [-total, 0]
+          const r = ((n % total) + total) % total;
+          return `${-r}px`;
+        },
+      },
+    });
   };
 
+  // Build once on mount and whenever the year changes (new images)
   useEffect(() => {
-    startMarquee();
+    // build fresh for new year (no need to preserve)
+    buildMarquee(false);
     return () => tweenRef.current?.kill();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year]);
 
+  // Rebuild on resize but PRESERVE progress so it won't jump
   useEffect(() => {
-    const onResize = () => startMarquee();
+    const onResize = () => buildMarquee(true);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const imgs = imagesByYear[year] || [];
@@ -85,23 +119,21 @@ export default function Gallery() {
           </div>
 
           <div className="relative overflow-hidden">
-            <div ref={trackRef} className="flex flex-nowrap gap-3 sm:gap-4 will-change-transform px-1.5 sm:px-2">
+            <div
+              ref={trackRef}
+              className="flex flex-nowrap gap-3 sm:gap-4 will-change-transform px-1.5 sm:px-2"
+            >
               {[...imgs, ...imgs].map((src, i) => (
                 <figure
                   key={`${src}-${i}`}
-                  className="
-                    relative            /* REQUIRED for next/image fill */
-                    shrink-0
-                    w-[220px] h-[260px] sm:w-[280px] sm:h-[320px]
-                    rounded-2xl overflow-hidden bg-gray-200 shadow-lg
-                  "
+                  className="relative shrink-0 w-[220px] h-[260px] sm:w-[280px] sm:h-[320px] rounded-2xl overflow-hidden bg-gray-200 shadow-lg"
                 >
                   <Image
                     src={src}
                     alt={`${year} Ganpati celebration photo ${i % imgs.length + 1}`}
                     fill
                     sizes="(max-width: 640px) 220px, 280px"
-                    className="object-cover"   /* keeps box size fixed */
+                    className="object-cover"
                     priority={i < 2}
                     draggable={false}
                   />
