@@ -3,19 +3,29 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 
-// ✅ GSAP 3.13.0 includes ModifiersPlugin in core
+// ✅ GSAP 3.13+ has ModifiersPlugin in core
 const { ModifiersPlugin } = gsap;
 gsap.registerPlugin(ModifiersPlugin);
-
-
-
 
 const YEARS = [2024, 2023, "Previous Years"];
 
 const imagesByYear = {
-  2024: ["/gallery/2024/1.jpg","/gallery/2024/2.jpg","/gallery/2024/3.jpg","/gallery/2024/4.jpg"],
-  2023: ["/gallery/2023/1.jpg","/gallery/2023/2.jpg","/gallery/2023/3.jpg"],
-  "Previous Years": ["/gallery/Previous_years/1.jpg","/gallery/Previous_years/2.jpg","/gallery/Previous_years/3.jpg"],
+  2024: [
+    "/gallery/2024/1.jpg",
+    "/gallery/2024/2.jpg",
+    "/gallery/2024/3.jpg",
+    "/gallery/2024/4.jpg"
+  ],
+  2023: [
+    "/gallery/2023/1.jpg",
+    "/gallery/2023/2.jpg",
+    "/gallery/2023/3.jpg"
+  ],
+  "Previous Years": [
+    "/gallery/Previous_years/1.jpg",
+    "/gallery/Previous_years/2.jpg",
+    "/gallery/Previous_years/3.jpg"
+  ],
 };
 
 export default function Gallery() {
@@ -23,17 +33,15 @@ export default function Gallery() {
   const trackRef = useRef(null);
   const tweenRef = useRef(null);
 
-  // pixels per second (↑ faster than before)
-  const SPEED = 45;
+  const SPEED = 45; // px/sec
 
   const buildMarquee = (preserveProgress = false) => {
     const el = trackRef.current;
     if (!el) return;
 
-    const total = el.scrollWidth / 2; // width of a single set
+    const total = el.scrollWidth / 2; // width of one loop
     if (total === 0) return;
 
-    // Save current progress if requested
     let prevProgress = 0;
     if (preserveProgress && tweenRef.current) {
       prevProgress = tweenRef.current.progress();
@@ -42,17 +50,14 @@ export default function Gallery() {
     tweenRef.current?.kill();
     tweenRef.current = null;
 
-    // Duration derived from distance / speed
     const duration = total / SPEED;
 
-    // Start from the same relative offset if rebuilding
     if (preserveProgress) {
       gsap.set(el, { x: -prevProgress * total });
     } else {
       gsap.set(el, { x: 0 });
     }
 
-    // Continuous wrap using ModifiersPlugin (no onRepeat jump)
     tweenRef.current = gsap.to(el, {
       x: `-=${total}`,
       duration,
@@ -61,7 +66,6 @@ export default function Gallery() {
       modifiers: {
         x: (x) => {
           const n = parseFloat(x);
-          // keep x in [-total, 0]
           const r = ((n % total) + total) % total;
           return `${-r}px`;
         },
@@ -69,20 +73,30 @@ export default function Gallery() {
     });
   };
 
-  // Build once on mount and whenever the year changes (new images)
+  // 🔹 Preserve progress when switching years
   useEffect(() => {
-    // build fresh for new year (no need to preserve)
-    buildMarquee(false);
+    buildMarquee(true);
     return () => tweenRef.current?.kill();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year]);
 
-  // Rebuild on resize but PRESERVE progress so it won't jump
+  // 🔹 Rebuild on resize but preserve position
   useEffect(() => {
     const onResize = () => buildMarquee(true);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 🔹 Resume animation when tab is visible again (mobile Safari fix)
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!document.hidden && tweenRef.current) {
+        tweenRef.current.play();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
   const imgs = imagesByYear[year] || [];
@@ -92,7 +106,9 @@ export default function Gallery() {
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6">
         <div className="rounded-3xl bg-white/75 backdrop-blur-md shadow-[0_10px_30px_-10px_rgba(0,0,0,0.25)] ring-1 ring-rose-100/60 px-4 sm:px-6 py-6 sm:py-8">
           <div className="text-center mb-5 sm:mb-6">
-            <h2 className="text-[24px] sm:text-3xl font-extrabold text-red-700">Memories Gallery</h2>
+            <h2 className="text-[24px] sm:text-3xl font-extrabold text-red-700">
+              Memories Gallery
+            </h2>
             <p className="mt-1 sm:mt-2 text-gray-700 text-[13px] sm:text-base">
               Relive the beautiful moments of our Ganpati celebrations through the years
             </p>
@@ -112,7 +128,8 @@ export default function Gallery() {
                       : "text-red-700 bg-white border border-red-200 hover:border-red-300",
                   ].join(" ")}
                 >
-                  <span className="mr-2">📅</span>{y}
+                  <span className="mr-2">📅</span>
+                  {y}
                 </button>
               );
             })}
