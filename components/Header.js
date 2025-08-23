@@ -17,7 +17,7 @@ export default function Header() {
         <MusicToggle />
         {showHint && (
           <div className="absolute top-12 bg-white/70 text-red-600 text-xs font-medium px-2 py-1 rounded-lg shadow-sm animate-bounce whitespace-nowrap">
-            Tap to play 🎶
+            Tap anywhere to play 🎶
           </div>
         )}
       </div>
