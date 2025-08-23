@@ -3,29 +3,16 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 
-// ✅ GSAP 3.13+ has ModifiersPlugin in core
+// ✅ GSAP 3.13+ includes ModifiersPlugin in core
 const { ModifiersPlugin } = gsap;
 gsap.registerPlugin(ModifiersPlugin);
 
 const YEARS = [2024, 2023, "Previous Years"];
 
 const imagesByYear = {
-  2024: [
-    "/gallery/2024/1.jpg",
-    "/gallery/2024/2.jpg",
-    "/gallery/2024/3.jpg",
-    "/gallery/2024/4.jpg"
-  ],
-  2023: [
-    "/gallery/2023/1.jpg",
-    "/gallery/2023/2.jpg",
-    "/gallery/2023/3.jpg"
-  ],
-  "Previous Years": [
-    "/gallery/Previous_years/1.jpg",
-    "/gallery/Previous_years/2.jpg",
-    "/gallery/Previous_years/3.jpg"
-  ],
+  2024: ["/gallery/2024/1.jpg","/gallery/2024/2.jpg","/gallery/2024/3.jpg","/gallery/2024/4.jpg"],
+  2023: ["/gallery/2023/1.jpg","/gallery/2023/2.jpg","/gallery/2023/3.jpg"],
+  "Previous Years": ["/gallery/Previous_years/1.jpg","/gallery/Previous_years/2.jpg","/gallery/Previous_years/3.jpg"],
 };
 
 export default function Gallery() {
@@ -35,28 +22,14 @@ export default function Gallery() {
 
   const SPEED = 45; // px/sec
 
-  const buildMarquee = (preserveProgress = false) => {
+  useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
 
-    const total = el.scrollWidth / 2; // width of one loop
+    const total = el.scrollWidth / 2;
     if (total === 0) return;
 
-    let prevProgress = 0;
-    if (preserveProgress && tweenRef.current) {
-      prevProgress = tweenRef.current.progress();
-    }
-
-    tweenRef.current?.kill();
-    tweenRef.current = null;
-
     const duration = total / SPEED;
-
-    if (preserveProgress) {
-      gsap.set(el, { x: -prevProgress * total });
-    } else {
-      gsap.set(el, { x: 0 });
-    }
 
     tweenRef.current = gsap.to(el, {
       x: `-=${total}`,
@@ -71,24 +44,11 @@ export default function Gallery() {
         },
       },
     });
-  };
 
-  // 🔹 Preserve progress when switching years
-  useEffect(() => {
-    buildMarquee(true);
     return () => tweenRef.current?.kill();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [year]);
-
-  // 🔹 Rebuild on resize but preserve position
-  useEffect(() => {
-    const onResize = () => buildMarquee(true);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 🔹 Resume animation when tab is visible again (mobile Safari fix)
+  // 🔹 Resume animation if tab becomes active again (mobile fix)
   useEffect(() => {
     const handleVisibility = () => {
       if (!document.hidden && tweenRef.current) {
@@ -114,6 +74,7 @@ export default function Gallery() {
             </p>
           </div>
 
+          {/* Year Buttons */}
           <div className="flex justify-center gap-2.5 sm:gap-3 mb-5 sm:mb-6">
             {YEARS.map((y) => {
               const active = y === year;
@@ -128,13 +89,13 @@ export default function Gallery() {
                       : "text-red-700 bg-white border border-red-200 hover:border-red-300",
                   ].join(" ")}
                 >
-                  <span className="mr-2">📅</span>
-                  {y}
+                  <span className="mr-2">📅</span>{y}
                 </button>
               );
             })}
           </div>
 
+          {/* Track */}
           <div className="relative overflow-hidden">
             <div
               ref={trackRef}
@@ -156,14 +117,6 @@ export default function Gallery() {
                   />
                 </figure>
               ))}
-
-              {imgs.length === 0 &&
-                [...Array(6)].map((_, i) => (
-                  <div
-                    key={`ph-${i}`}
-                    className="shrink-0 w-[220px] h-[260px] sm:w-[280px] sm:h-[320px] rounded-2xl bg-gray-200/80"
-                  />
-                ))}
             </div>
           </div>
         </div>
