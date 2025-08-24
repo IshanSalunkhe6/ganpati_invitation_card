@@ -11,8 +11,8 @@ const YEARS = [2024, 2023, "Previous Years"];
 
 const imagesByYear = {
   2024: ["/gallery/2024/1.jpg","/gallery/2024/2.jpg","/gallery/2024/3.jpg","/gallery/2024/4.jpg"],
-  2023: ["/gallery/2023/1.jpg","/gallery/2023/2.jpg","/gallery/2023/3.jpg"],
-  "Previous Years": ["/gallery/Previous_years/1.jpg","/gallery/Previous_years/2.jpg","/gallery/Previous_years/3.jpg"],
+  2023: ["/gallery/2023/1.jpg","/gallery/2023/2.jpg","/gallery/2023/3.jpg","/gallery/2023/4.jpg"],
+  "Previous Years": ["/gallery/Previous_years/1.jpg","/gallery/Previous_years/2.jpg","/gallery/Previous_years/3.jpg","/gallery/Previous_years/4.jpg"],
 };
 
 export default function Gallery() {
