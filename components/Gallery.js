@@ -89,7 +89,7 @@ export default function Gallery() {
                       : "text-red-700 bg-white border border-red-200 hover:border-red-300",
                   ].join(" ")}
                 >
-                  <span className="mr-2">📅</span>{y}
+                  {y}
                 </button>
               );
             })}
